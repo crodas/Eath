@@ -67,9 +67,10 @@ class Phar extends BaseApp
         }
 
         foreach ($package->getBins() as $cmd => $entryPoint) {
-            @unlink($cmd . '.phar');
-            $phar = new PharClass($cmd . '.phar', 0);
-            $output->writeLn("<info>Generating {$cmd}.phar</info>");
+            $dest = $pwd . $cmd . '.phar';
+            @unlink($dest);
+            $phar = new PharClass($dest, 0);
+            $output->writeLn("<info>Generating {$dest}</info>");
 
             $dir = $this->env->getTempDir();
             $fs  = $this->env->get('fs');
@@ -96,7 +97,7 @@ class Phar extends BaseApp
                 . $phar->createDefaultStub($entryPoint)
             );
 
-            $phars[] = $cmd . '.phar';
+            $phars[] = $dest;
         }
         return $phars;
     }
