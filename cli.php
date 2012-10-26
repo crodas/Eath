@@ -40,7 +40,3 @@ require __DIR__ . "/packages/autoload.php";
 $env = new \Eath\Environment;
 $app = new \Eath\Command($env);
 $app->main();
-
-//$env->ini_set("auto_prepend_file", "/tmp/foobar.php");
-$bin = $env->getObject('Binary');
-$bin->link(__FILE__, "pinstaller");
