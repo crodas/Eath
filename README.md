@@ -77,5 +77,6 @@ TODO
 
 1. Unit tests (urgent)
 2. Documentation
-3. Add HTTP authentication
-4. Commands to generate `package.yml`
+3. Dependency solver, something like http://en.opensuse.org/openSUSE:Libzypp_satsolver 
+4. Add HTTP authentication
+5. Commands to generate `package.yml`
