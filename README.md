@@ -71,3 +71,11 @@ dependencies:
     - github:symfony/Yaml
     - github:crodas/Autoloader
 ```
+
+TODO
+----
+
+1. Unit tests (urgent)
+2. Documentation
+3. Add HTTP authentication
+4. Commands to generate `package.yml`

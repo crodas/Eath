@@ -1,0 +1,37 @@
+# Project name
+name: eath
+
+# Author (optional). This will be useful
+# when we build the eath-server
+author: 
+    name: César Rodas
+    email: crodas@php.net
+
+# Will show a warning if it is installed
+# locally
+preferGlobal: true
+
+# Version
+version: 0.0.2-dev
+
+# This package will create a executable, in this
+# case 'eath'. 
+# In order to produce portable binaries, all files
+# of this project, and its dependencies will be packed
+# in a phar file, an will use `cli.php` as their stub.
+bin:
+    eath: cli.php
+
+# What files are used, or should be exported if it is
+# installed as a dependency. Also, it is where the autoload
+# will generate the static autoloader
+files: [lib/, cli.php]
+
+# Dependencies
+dependencies:
+    - github:symfony/Console
+    - github:symfony/Filesystem
+    - github:symfony/Process
+    - github:symfony/Finder
+    - github:symfony/Yaml
+    - github:crodas/Autoloader
