@@ -36,7 +36,7 @@ How to use it?
 --------------
 
 ```bash
-wget -c https://raw.github.com/crodas/Autoloader/master/eath.phar
+wget -c https://raw.github.com/crodas/Eath/master/eath.phar
 php eath.phar install <url>
 ```
 
