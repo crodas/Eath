@@ -84,14 +84,19 @@ class Packages extends BaseClass
         $this->packages[] = $this->env->get('Package', $package);
     }
 
-    public function getAll(Array $names = array())
+    public function getAll(Array $names = array(), $install = true)
     {
         if (empty($names)) {
             return $this->packages;
         }
         $packages = array();
         foreach ($names as $name) {
-            $packages[] = $this->get($name, true);
+            $package = $this->get($name, !$install);
+            if (!$package) {
+                $package = $this->env->get('Package', $name);
+                $package->install();
+            }
+            $packages[] = $package;
         }
         return $packages;
     }
@@ -103,6 +108,7 @@ class Packages extends BaseClass
                 return $package;
             }
         }
+
         if ($throw) {
             throw new \RuntimeException("Cannot find package {$name}. Try with install all dependencies");
         }

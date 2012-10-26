@@ -43,16 +43,25 @@ class Environment
     protected $output;
     protected $pwd;
     protected $global = false;
+    protected $dir    = 'packages';
     protected $singleton = array();
 
     public function __construct()
     {
+        $localPackage = $this->get('Package', getcwd());
+
+        if ($packageDir = $localPackage->getInfo('packageDirectory')) {
+            $this->setPackageDirectory($packageDir);
+        }
+
+        $this->singleton['fs'] = new Filesystem;
+        $this->singleton['localPackage'] = $localPackage;
+
         foreach (array('Packages') as $name) {
             $this->singleton[$name] = $this->get($name);
         }
-        $this->singleton['fs'] = new Filesystem;
-        $this->singleton['localPackage'] = $this->get('Package', getcwd());
     }
+
 
     public function setOutput($output)
     {
@@ -69,9 +78,18 @@ class Environment
         return $_SERVER['_'];
     }
 
+    public function setPackageDirectory($dir)
+    {
+        if (!preg_match('@^[a-z0-9_]+$@', $dir)) {
+            throw new \RuntimeException("invalid package directory {$dir}");
+        }
+        $this->dir = $dir;
+        return $this;
+    }
+
     public function getPackageDirectory()
     {
-        return 'packages';
+        return $this->dir;
     }
 
     public function getGlobalPath($tryToCreate = true)
@@ -179,12 +197,13 @@ class Environment
 
     public function getBootstrap($global = false)
     {
-        return ($global ? $this->getGlobalPath() : $this->getLocalPath()) . 'autoload.php';
+        return $this->getInstallPath($global) . 'autoload.php';
     }
 
-    public function getInstallPath()
+    public function getInstallPath($global = false)
     {
-        $dir = $this->getcwd() . '/packages/';
+
+        $dir = ($global ? $this->getGlobalPath() : $this->getLocalPath());
         if (!is_dir($dir)) {
             if (!is_writable(dirname($dir))) {
                 $this->output->writeln("Cannot create directory {$dir}");

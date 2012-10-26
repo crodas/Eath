@@ -42,7 +42,7 @@ class Archive extends Dummy
      *  Archive packages are useless on their own, they simple
      *  unpacks their contents and returns a local package
      */
-    public function init()
+    public function init($installed)
     {
         $tmpdir  = $this->env->getTempDir();
         $archive = $this->env->get('Archive', $this->path);

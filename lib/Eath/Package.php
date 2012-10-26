@@ -76,7 +76,15 @@ abstract class Package extends BaseClass
             } else if (is_file($url)) {
                 $obj = new Package\Archive($url);
             } else if (strpos($url, 'ext-') === 0) {
-                $obj = new Package\Http("http://pecl.php.net/get/" . substr($url, 4));
+                $ext  = substr($url, 4);
+                try {
+                    $refl = new \ReflectionExtension($ext);
+
+                    // already installed!
+                    $obj = new Package\Dummy;
+                } catch (\Exception $e) {
+                    $obj = new Package\Http("http://pecl.php.net/get/" . $ext);
+                }
             } else {
                 throw new \RuntimeException("Don't know how to treat package");
             }

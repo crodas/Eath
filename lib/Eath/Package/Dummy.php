@@ -39,6 +39,12 @@ use Eath\Package;
 
 class Dummy extends Package
 {
+
+    public function __construct($path = '' )
+    {
+        $this->path = $path;
+    }
+
     public function init($installed)
     {
     }
@@ -65,5 +71,10 @@ class Dummy extends Package
     public function install()
     {
         return false;
+    }
+
+    public function __toString()
+    {
+        return '';
     }
 }
