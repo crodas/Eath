@@ -36,6 +36,7 @@
 */
 namespace Eath;
 
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Environment
@@ -45,6 +46,7 @@ class Environment
     protected $global = false;
     protected $dir    = 'packages';
     protected $singleton = array();
+    protected $home;
 
     public function __construct()
     {
@@ -57,13 +59,26 @@ class Environment
         $this->singleton['fs'] = new Filesystem;
         $this->singleton['localPackage'] = $localPackage;
 
-        foreach (array('Packages') as $name) {
-            $this->singleton[$name] = $this->get($name);
+        $home = $_SERVER['HOME'];
+        if (empty($home)) {
+            throw new \RuntimeException("Cannot guest the home directory");
         }
+        
+        $home .= DIRECTORY_SEPARATOR . '.eath' . DIRECTORY_SEPARATOR;
+        if (!is_dir($home)) {
+            $this->get('fs')->mkdir($home);
+        }
+
+        $this->home = $home;
+    }
+
+    public function getHomePath()
+    {
+        return $this->home;
     }
 
 
-    public function setOutput($output)
+    public function setOutput(ConsoleOutput $output)
     {
         $this->output = $output;
     }
@@ -156,8 +171,9 @@ class Environment
         $obj->setEnvironment($this);
         
         if (is_callable(array($obj, 'init'))) {
-            $obj->init();
+            call_user_func_array(array($obj, 'init'), $args);
         }
+
         return $obj;
     }
 

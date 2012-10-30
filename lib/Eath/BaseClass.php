@@ -40,6 +40,10 @@ class BaseClass
 {
     protected $env;
 
+    public function __construct()
+    {
+    }
+
     public function setEnvironment(Environment $env) 
     {
         $this->env = $env;

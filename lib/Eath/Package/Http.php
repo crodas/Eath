@@ -38,8 +38,11 @@ namespace Eath\Package;
 
 class Http extends Dummy
 {
-    public function init($installed)
+    public function init($installed, $version)
     {
+        if (!is_null($version)) {
+            throw new \RuntimeException("Direct link installation do not support versions");
+        }
         $parts = parse_url($this->path);
         if ($parts['host'] == 'github.com' || $parts['host'] == 'www.github.com') {
             if (!empty($parts['path']) && substr_count($parts['path'], '/') == 2) {
@@ -53,23 +56,15 @@ class Http extends Dummy
         $httpClient = $this->env->get('HttpRequest', $this->path)
             ->setOutputFile($tmpFile);
 
-        if ($installed) {
-            $httpClient->setLastMod($installed->getInfo('Last-Modified'));
-        }
-
         $httpClient->run();
 
-        switch ($httpClient->getStatus()) {
-        case 304:
-            // nothing to update!
+        if ($httpClient->isCached()) {
             return new Package\Dummy;
-        case 200:
-            $archive = $this->env->get('Archive', $tmpFile);
-            return $archive->extractTo($tmpDir, $this->path, basename($this->path))
+        }
+        
+        $archive = $this->env->get('Archive', $tmpFile);
+        return $archive->extractTo($tmpDir, $this->path, basename($this->path))
                 ->setInfo('Last-Modified', time());
-        default:
-            throw new \RuntimeException("HTTP Status: {$httpClient->getStatus()}");
-        } 
 
     }
 }

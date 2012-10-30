@@ -45,7 +45,7 @@ class Dummy extends Package
         $this->path = $path;
     }
 
-    public function init($installed)
+    public function init($installed, $version)
     {
     }
 

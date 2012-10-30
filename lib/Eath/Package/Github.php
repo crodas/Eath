@@ -53,10 +53,26 @@ class Github extends Dummy
             $package->setName($this->path, true)
                 ->setFolderName($this->url);
         }
-        return $package;
+        return $package->install();
     }
 
-    public function init($installed)
+    public function getRepositoryInfo(&$cached = NULL)
+    {
+        $httpClient = $this->env->get('HttpRequest');
+        $httpClient->setUrl("https://api.github.com/repos/{$this->url}/git/refs")
+            ->run();
+        $cached = $httpClient->isCached();
+        
+        return $httpClient->getResponse();
+    }
+
+    public function init($installed, $version)
+    {
+        $this->installed = $installed;
+        $this->version   = $version;
+    }
+
+    public function install()
     {
         list(, $url)  = explode(':', $this->path);
         $url    = trim($url, '/');
@@ -65,50 +81,52 @@ class Github extends Dummy
 
         $this->url       = $url;
         $this->branch    = $branch;
-        $this->installed = $installed;
 
-        if (!$installed) {
+        if (!empty($this->version)) {
+            $refs = $this->getRepositoryInfo();
+            foreach ($refs as $ref) {
+                list(, $type, $ver) = explode("/", $ref['ref'], 3);
+
+                $this->env->get('Version', $ver);
+            }
+            var_dump($this->env->get('Version', $version));exit;
+        }
+
+
+        if (!$this->installed) {
             return $this->fetch();
         }
 
         $installedVersion = $installed->getVersion();
         $lastModified     = $installed->getInfo('Last-Modified');
 
-        $httpClient = $this->env->get('HttpRequest')->setLastMod($lastModified);
+        $httpClient = $this->env->get('HttpRequest');
 
-        $httpClient->setUrl("https://raw.github.com/{$url}/{$branch}/package.yml")
-            ->run();
+        try {
+            $httpClient->setUrl("https://raw.github.com/{$url}/{$branch}/package.yml")
+                ->run();
 
-        switch ($httpClient->getStatus()) {
-        case 304:
-            return;
-        case 200:
-            $this->loadPackageInfo($httpClient->getResponse());
-            break;
-        default:
+            if ($httpClient->isCached()) {
+                return new Dummy;
+            }
+
+            $this->loadpackageinfo($httpClient->getResponse());
+        } catch (\RuntimeException $e) {
+            // page not found
             try {
                 $httpClient->setUrl("https://api.github.com/repos/{$url}/git/refs/heads/{$branch}")
                     ->run();
-                if ($httpClient->getStatus() == 304) {
-                    return;
-                } else if ($httpClient->getStatus() !== 200) {
-                    // rate limits
-                    throw new \Exception;
+                if ($httpClient->isCached()) {
+                    // nothing new!
+                    return new Dummy;
                 }
-
                 $ref  = $httpClient->getResponse();
                 $tree = $httpClient->setUrl($ref['object']['url'])->run()->getResponse();
-                if ($httpClient->getStatus() == 304) {
-                    return;
-                } else if ($httpClient->getStatus() !== 200) {
-                    // rate limits
-                    throw new \Exception;
-                }
 
                 $version = strtotime($tree['committer']['date']);
                 $this->loadPackageInfo(array('version' => $version));
-            } catch (\Exception $e) {
-                // Probably rate limits
+            } catch (\RuntimeException $e) {
+                // rate limits
                 return $this->fetch();
             }
         }

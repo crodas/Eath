@@ -29,9 +29,10 @@ files: [lib/, cli.php]
 
 # Dependencies
 dependencies:
-    - github:symfony/Console
     - github:symfony/Filesystem
+    - github:symfony/Console: '2.1.*'
     - github:symfony/Process
     - github:symfony/Finder
     - github:symfony/Yaml
     - github:crodas/Autoloader
+    - github:crodas/Haanga2

@@ -61,7 +61,7 @@ class Local extends Package
         }
     }
 
-    public function init($installed)
+    public function init($installed, $version)
     {
         $this->newest = !$installed || version_compare($installed->getVersion(), $this->getVersion(), '<');
     }

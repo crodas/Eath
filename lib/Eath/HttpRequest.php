@@ -42,9 +42,9 @@ class HttpRequest extends BaseClass
     protected $file;
     protected $header = array();
 
+    protected $meta;
     protected $response;
-    protected $status;
-    protected $contentType;
+    protected $isCached;
 
     public function __construct($url = '')
     {
@@ -63,15 +63,14 @@ class HttpRequest extends BaseClass
         return $this;
     }
 
-    public function setLastMod($ttl)
+    public function isCached()
     {
-        $this->header[] = "If-Modified-Since: " . gmdate('D, d M Y H:i:s \G\M\T', $ttl);
-        return $this;
+        return $this->isCached;
     }
 
     public function getStatus()
     {
-        return $this->status;
+        return $this->meta['status'];
     }
 
     public function getResponse()
@@ -81,8 +80,15 @@ class HttpRequest extends BaseClass
 
     public function run()
     {
-        $this->env->getOutput()
-            ->writeLn("Fetching: {$this->url}");
+        $writer = $this->env->getOutput();
+        $writer->writeLn("Fetching: {$this->url}");
+
+        $fs = $this->env->get('fs');
+        $cache = $this->env->getHomePath() . 'HttpCache/' . sha1($this->url);
+        if (!is_dir(dirname($cache))) {
+            $fs->mkdir(dirname($cache));
+        }
+
         $args = array(
             CURLOPT_URL => $this->url,
             CURLOPT_FOLLOWLOCATION  => TRUE,
@@ -91,27 +97,64 @@ class HttpRequest extends BaseClass
             CURLOPT_BUFFERSIZE      => 64000, 
         );
 
-        if (!empty($this->file)) {
-            $args[CURLOPT_FILE] = fopen($this->file, 'w+');
-        } else {
-            $args[CURLOPT_RETURNTRANSFER] = TRUE;
+        $args[CURLOPT_FILE] = fopen($cache . '.tmp', 'w+');
+
+        $header = array();
+        if (is_file($cache . '.meta') && filesize($cache . '.meta') > 0) {
+            $header[] = "If-Modified-Since: " . gmdate('D, d M Y H:i:s \G\M\T', filemtime($cache . '.meta'));
         }
 
-        if (count($this->header)) {
-            $args[CURLOPT_HTTPHEADER] = $this->header;
+        if (count($header)) {
+            $args[CURLOPT_HTTPHEADER] = $header;
         }
 
         $ch = curl_init();
         curl_setopt_array($ch, $args);
 
-        $this->response    = curl_exec($ch);
-        $this->status      = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $meta = array(
+            'curl_status'   => curl_exec($ch),
+            'status'        => curl_getinfo($ch, CURLINFO_HTTP_CODE),
+            'contentType'   => curl_getinfo($ch, CURLINFO_CONTENT_TYPE),
+            'responseFile'  => $cache,
+        );
 
-        if (strpos($this->contentType, 'json') !== false) {
-            $this->response = json_decode($this->response, true);
+        switch ($meta['status']) {
+        case 304:
+            // hit cache
+            $fs->remove($cache . '.tmp');
+            $cachedMeta = unserialize(file_get_contents($cache . '.meta'));
+
+            if (!is_array($cachedMeta) || count($meta) !== count($cachedMeta)) {
+                $fs->remove($cache . '.meta');
+                return $this->run();
+            }
+            $this->isCached = true;
+            $meta = $cachedMeta;
+            $writer->writeLn("\tCached");
+            break;
+
+        case 200:
+            $this->isCached = false;
+            file_put_contents($cache . '.meta', serialize($meta));
+            $fs->copy($cache . '.tmp', $cache, true);
+            $fs->remove($cache . '.tmp');
+            break;
+
+        default:
+            throw new \RuntimeException("HTTP Status " . $meta['status']);
         }
 
+        if (!empty($this->file)) {
+            $fs->copy($cache, $this->file);
+        } else {
+            $content = file_get_contents($cache);
+            if (strpos($meta['contentType'], 'json') !== false) {
+                $content = json_decode($content, true);
+            }
+            $this->response = $content;
+        }
+
+        $this->meta = $meta;
         curl_close($ch);
 
         return $this;

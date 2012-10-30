@@ -85,6 +85,7 @@ class Command extends App
         if ($input->hasParameterOption(array('-g', '--global'))) {
             $this->env->setGlobal();
         }
+        $this->env->setOutput($output);
         parent::run($input, $output);
     }
 

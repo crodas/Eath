@@ -52,6 +52,14 @@ abstract class Package extends BaseClass
     public static function getInstance($env, $url, Package $prevInstalled = NULL)
     {
         $installed = $prevInstalled;
+
+        $version = NULL;
+        if (is_array($url)) {
+            $version = current($url);
+            $url     = key($url);
+        }
+
+
         if (is_dir($url)) {
             $finder = new Finder();
             $finder->files()->in($url)
@@ -91,7 +99,7 @@ abstract class Package extends BaseClass
         }
 
         $obj->setEnvironment($env);
-        $return = $obj->init($installed);
+        $return = $obj->init($installed, $version);
         if ($return instanceof self) {
             return $return;
         }
@@ -215,7 +223,7 @@ abstract class Package extends BaseClass
         return $this->info['version'];
     }
 
-    public function processDependencies()
+    public function processDependencies($update = false)
     {
         if (empty($this->info['dependencies'])) {
             return false;
@@ -224,8 +232,10 @@ abstract class Package extends BaseClass
         $packages     = $this->env->get('Packages');
         $hasInstalled = false;
         foreach ($this->info['dependencies'] as $dep) {
-            $this->env->get('Package', $dep)
-                ->install();
+            if (!$packages->isInstalled($dep)  || $update) {
+                $this->env->get('Package', $dep)
+                    ->install();
+            }
             $hasInstalled = true;
         }
         return $hasInstalled;
@@ -245,7 +255,7 @@ abstract class Package extends BaseClass
         $this->updatePackageInfo();
     }
     
-    abstract public function init($installed);
+    abstract public function init($installed, $version);
 
     abstract public function getDeps($install = false);
 

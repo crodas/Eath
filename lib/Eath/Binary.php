@@ -42,9 +42,10 @@ class Binary extends BaseClass
     {
         $bin = $this->env->getBinPath();
         $fs  = $this->env->get('fs');
+        $name = basename($phar);
 
-        $fs->copy($phar, $bin . $phar);
-        $this->link($bin . $phar, substr($phar, 0, -5));
+        $fs->copy($phar, $bin . $name);
+        $this->link($bin . $name, substr($name, 0, -5));
     }
 
     public function link($source, $binName)

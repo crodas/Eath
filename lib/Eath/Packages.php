@@ -49,6 +49,22 @@ class Packages extends BaseClass
     protected $global;
     protected $local;
 
+    public static function getInstance($env)
+    {
+        static $instance = null;
+        if (is_null($instance)) {
+            $instance = new self;
+            $instance->setEnvironment($env);
+            $instance->init();
+        }
+        return $instance;
+    }
+
+    public function isInstalled($package)
+    {
+        return $this->get($package) instanceof Package;
+    }
+
     public function init()
     {
         $env    = $this->env;
@@ -103,6 +119,11 @@ class Packages extends BaseClass
 
     public function get($name, $throw = false)
     {
+        $version = NULL;
+        if (is_array($name)) {
+            $version = current($name);
+            $name    = key($name);
+        }
         foreach ($this->packages as $package) {
             if ($package->getName() === $name || $package->getSource() === $name) {
                 return $package;
