@@ -60,7 +60,21 @@ class Autoload extends BaseApp
         $files = call_user_func_array('array_merge', $files);
 
         $output->writeLn('<info>Building autoloader</info>');
-        $autoloader = $this->env->get('Autoloader', $files);
+
+        $dir = $this->env->getLocalPath();
+        $autoloader = new \Autoloader\Generator;
+        $autoloader->multipleFiles()
+            ->relativePaths()
+            ->multipleFiles()
+            ->setPathCallback(function($class, $prefix) use ($dir) {
+                if (!is_dir($dir .  "/.autoloader/")) {
+                    mkdir("{$dir}/.autoloader");
+                }
+                $file = trim(str_replace("\\", "-", $class), "-");
+                return "{$dir}/.autoloader/{$file}.php";
+            })
+            ->setScanPath($files);
+
         $autoloader->generate( $this->env->getBootstrap(), $this->env->getInstallPath() . 'autoload.cache' );
 
         if ($this->env->isGlobal()) {
@@ -73,16 +87,15 @@ class Autoload extends BaseApp
             
             $files = call_user_func_array('array_merge', $files);
 
-            if (count($files)  == 0) {
+            if (count($files) == 0) {
                 return;
             }
 
             $output->writeLn('<info>Building global autoloader</info>');
 
-            $path = $this->env->getGlobalPath();
-            $this->env->get('Autoloader', $files)
-                ->setOutputDir($path)
-                ->generate($this->env->getBootstrap(true), $path . 'autoload.cache');
+            $dir = $this->env->getGlobalPath();
+            $autoloader->setScanPath($files);
+            $autoloader->generate($this->env->getBootstrap(true), $path . 'autoload.cache');
         }
     } 
 }
