@@ -77,6 +77,18 @@ class Autoload extends BaseApp
 
         $autoloader->generate( $this->env->getBootstrap(), $this->env->getInstallPath() . 'autoload.cache' );
 
+        $includePath = $package->getInfo('include_path');
+        if ($includePath) {
+            $path = "";
+            foreach ((array)$includePath as $package) {
+                $pdir  = explode(DIRECTORY_SEPARATOR, $this->env->get('Package', $package)->getInstalledPath());
+                $path .= '__DIR__ . ' .var_export(end($pdir), true)  . ' . PATH_SEPARATOR .';
+            }
+            file_put_contents($this->env->getBootstrap(), "set_include_path($path get_include_path());", FILE_APPEND | LOCK_EX);
+        }
+
+
+
         if ($this->env->isGlobal()) {
             $files = array();
             foreach ($this->env->get('Packages')->getAll() as $dep) {

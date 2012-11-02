@@ -60,6 +60,7 @@ class Phar extends BaseApp
             // re-spawn another PHP process disabling phar.readonly
             $args = array_merge(array('-d', 'phar.readonly=0'), $GLOBALS['argv']);
             $process = new Process($_SERVER['_'] . ' ' . implode(' ', $args));
+            $process->setTimeout(3600);
             $process->run(function($type, $buffer) {
                 echo $buffer;
             });
@@ -83,13 +84,24 @@ class Phar extends BaseApp
             $output->writeLn("<info>\tPacking deps packages</info>");
             foreach ($package->getDeps(true) as $pkg) {
                 foreach ($pkg->getFiles() as $file) {
-                    $fs->copy($file, $dir . 'packages/' . $pkg->getName() . '/' . $file->getRelativePathname());
+                    $fs->copy($file, $dir . 'packages/' . sha1($pkg->getName()) . '/' . $file->getRelativePathname());
                 }
             }
 
             $output->writeLn("<info>\tGenerating autoloader</info>");
             $autoload = new \Autoloader\Generator($dir);
             $autoload->relativePaths()->generate($dir . 'packages/autoload.php');
+
+            $includePath = $package->getInfo('include_path');
+            if ($includePath) {
+                $path = "";
+                foreach ((array)$includePath as $package) {
+                    $path .= '__DIR__ . ' .var_export('/' . sha1($package), true)  . ' . PATH_SEPARATOR .';
+                }
+
+                file_put_contents($dir . 'packages/autoload.php', "set_include_path($path get_include_path());", FILE_APPEND | LOCK_EX);
+            }
+
 
             $phar->buildFromDirectory($dir);
             $phar->addFile($entryPoint, $entryPoint);

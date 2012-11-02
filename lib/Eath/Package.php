@@ -45,6 +45,7 @@ use Symfony\Component\Yaml\Parser;
 abstract class Package extends BaseClass
 {
     protected $path;
+    protected $installed;
     protected $isLocal      = true;
     protected $info         = array();
     protected $folderName   = NULL;
@@ -99,6 +100,9 @@ abstract class Package extends BaseClass
         }
 
         $obj->setEnvironment($env);
+        if ($installed) {
+            $obj->setInstalled($installed);
+        }
         $return = $obj->init($installed, $version);
         if ($return instanceof self) {
             return $return;
@@ -203,7 +207,7 @@ abstract class Package extends BaseClass
 
     public function getPath()
     {
-        return $this->dir;
+        return $this->path;
     }
 
     public function getBins()
@@ -253,6 +257,20 @@ abstract class Package extends BaseClass
         }
 
         $this->updatePackageInfo();
+    }
+
+    public function setInstalled(Package $installed)
+    {
+        $this->installed = $installed;
+        return $this;
+    }
+
+    public function getInstalledPath()
+    {
+        if (empty($this->installed)) {
+            return NULL;
+        }
+        return $this->installed->getPath();
     }
     
     abstract public function init($installed, $version);
