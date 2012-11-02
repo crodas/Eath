@@ -109,8 +109,8 @@ class Packages extends BaseClass
         foreach ($names as $name) {
             $package = $this->get($name, !$install);
             if (!$package) {
-                $package = $this->env->get('Package', $name);
-                $package->install();
+                $this->env->get('Package', $name)->install();
+                $package = $this->get($name, true);
             }
             $packages[] = $package;
         }
@@ -124,9 +124,19 @@ class Packages extends BaseClass
             $version = current($name);
             $name    = key($name);
         }
+
         foreach ($this->packages as $package) {
             if ($package->getName() === $name || $package->getSource() === $name) {
                 return $package;
+            }
+        }
+
+        if (substr($name, 0, 4) == 'ext-') {
+            // an extension
+            $ext = $this->env->get('Package', $package);
+            if ($ext instanceof Package\Dummy) {
+                // installed
+                return $ext;
             }
         }
 
