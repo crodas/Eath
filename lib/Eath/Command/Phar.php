@@ -104,7 +104,13 @@ class Phar extends BaseApp
 
 
             $phar->buildFromDirectory($dir);
-            $phar->addFile($entryPoint, $entryPoint);
+            if (is_file($entryPoint)) {
+                $phar->addFile($entryPoint, $entryPoint);
+            } else {
+                $phar->addFromString(sha1($entryPoint), $entryPoint);
+                $entryPoint = sha1($entryPoint);
+            }
+
             $phar->setStub("#!/usr/bin/env php\n"
                 . $phar->createDefaultStub($entryPoint)
             );
