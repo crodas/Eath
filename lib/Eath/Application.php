@@ -42,7 +42,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-class Command extends App
+class Application extends App
 {
     protected $env;
 

@@ -82,7 +82,8 @@ class Extension extends Dummy
                 if (!empty($matches)) {
                     $code = preg_replace('@/\*([^\*]+\*/)+@', '', $matches[1]);
                     $args = array_map('trim', explode(",", $code));
-                    if ($args[0] == 'xSTANDARD_MODULE_HEADER') {
+
+                    if ($args[0] == 'STANDARD_MODULE_HEADER') {
                         $version = $args[8];
                     } else {
                         foreach ($args as $id => $arg) {
@@ -96,8 +97,10 @@ class Extension extends Dummy
                         if ($version[0] == '"') {
                             $version = trim($version, '"');
                         } else {
-                            $version = $this->getMacroValue($version);
-                            var_dump($version);exit;
+                            if (substr(trim($version), 0, 3) == '#if') {
+                                list(, $version, ) = explode("\n", $version, 3);
+                            }
+                            $version = $this->getMacroValue(trim($version));
                         }
                     }
                 }

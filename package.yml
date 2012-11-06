@@ -36,3 +36,6 @@ dependencies:
     - github:symfony/Yaml
     - github:crodas/Autoloader
     - github:crodas/Haanga2
+
+scripts:
+    test: "phpunit"

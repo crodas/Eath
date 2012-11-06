@@ -131,7 +131,7 @@ class Packages extends BaseClass
             }
         }
 
-        if (substr($name, 0, 4) == 'ext-') {
+        if (substr($name, 0, 4) == 'ext-' && $throw) {
             // an extension
             $ext = $this->env->get('Package', $package);
             if ($ext instanceof Package\Dummy) {

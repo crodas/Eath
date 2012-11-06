@@ -38,5 +38,5 @@
 require __DIR__ . "/packages/autoload.php";
 
 $env = new \Eath\Environment;
-$app = new \Eath\Command($env);
+$app = new \Eath\Application($env);
 $app->main();
