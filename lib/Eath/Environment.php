@@ -85,6 +85,9 @@ class Environment
 
     public function getOutput()
     {
+        if (empty($this->output)) {
+            $this->output = new  ConsoleOutput();
+        }
         return $this->output;
     }
 

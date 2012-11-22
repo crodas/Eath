@@ -130,6 +130,22 @@ class Extension extends Dummy
         $this->info = compact('name', 'version', 'source');
     }
 
+    public function updatePackageInfo()
+    {
+        $dumper = new Dumper;
+        $info   = $this->info;
+        if (empty($info['version'])) {
+            $info['version'] = $this->getVersion();
+        }
+
+        if (empty($info['name'])) {
+            $info['name'] = $this->getName();
+        }
+
+        $yaml = $dumper->dump($info, 3);
+        file_put_contents($this->path . '/package.yml', $yaml);
+    }
+
     public function install()
     {
         $installed = phpversion($this->getName());
@@ -141,31 +157,45 @@ class Extension extends Dummy
         $config  = $this->configm4;
         $print   = $this->env->getOutput();
 
-        $process = new Process('/usr/bin/phpize', dirname($config));
-        $process->run();
         $print->writeLn("<info>\tBuilding</info>");
+        $process = new Process('/usr/bin/phpize', dirname($config));
+        $process->run(function($type, $output) {
+            file_put_contents('php://std' . $type, $output);
+        });
+
 
         if (!$process->isSuccessful()) {
             throw new \RuntimeException("phpize execution failed");
         }
 
-        $process = new Process('./configure', dirname($config));
-        $process->run();
         $print->writeLn("<info>\tConfiguring</info>");
+        $process = new Process('./configure', dirname($config));
+        $process->run(function($type, $output) {
+            file_put_contents('php://std' . $type, $output);
+        });
 
         if (!$process->isSuccessful()) {
             throw new \RuntimeException("./configure failed");
         }
 
-        $process = new Process('make install', dirname($config));
-        $process->run();
         $print->writeLn("<info>\tCompiling</info>");
+        $process = new Process('make install', dirname($config));
+        $process->run(function($type, $output) {
+            file_put_contents('php://std' . $type, $output);
+        });
+
         if (!$process->isSuccessful()) {
             throw new \RuntimeException("make install failed");
         }
 
         $this->env->ini_set('extension', $this->getName() . '.' . PHP_SHLIB_SUFFIX, $this->getName());
         $print->writeLn("<info>\tInstalled</info>");
+
+        // copying package info to avoid redownloading
+        $pwd  = $this->env->getGlobalPath();
+        $dest = $pwd . $this->getFolderName();
+
+        die($dest);
 
         // done :-)
         return true;
