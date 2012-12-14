@@ -46,6 +46,8 @@ class Binary extends BaseClass
 
         $fs->copy($phar, $bin . $name);
         $this->link($bin . $name, substr($name, 0, -5));
+        $this->env->getOutput()
+            ->writeLn("Installed $bin$name");
     }
 
     public function link($source, $binName)

@@ -97,8 +97,8 @@ class Github extends Dummy
             return $this->fetch();
         }
 
-        $installedVersion = $installed->getVersion();
-        $lastModified     = $installed->getInfo('Last-Modified');
+        $installedVersion = $this->installed->getVersion();
+        $lastModified     = $this->installed->getInfo('Last-Modified');
 
         $httpClient = $this->env->get('HttpRequest');
 

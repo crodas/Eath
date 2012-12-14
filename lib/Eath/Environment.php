@@ -93,6 +93,13 @@ class Environment
 
     public function getPHPBin()
     {
+        if (empty($_SERVER['_'])) {
+            if (!empty($_SERVER['SUDO_COMMAND'])) {
+                $parts = explode(" ", $_SERVER['SUDO_COMMAND'], 2);
+                return $parts[0];
+            }
+            throw new \RuntimeException("Dont know php binary location");
+        }
         return $_SERVER['_'];
     }
 

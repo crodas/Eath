@@ -54,8 +54,8 @@ class InstallBin extends BaseApp
         $package = $this->env->get('localPackage');
         $phars   = $this->getApplication()->get('phar')->execute($input, $output);
 
-        $bin = $this->env->get('Binary');
 
+        $bin = $this->env->get('Binary');
         foreach ($phars as $phar) {
             $bin->copy($phar);
         }
