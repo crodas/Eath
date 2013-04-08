@@ -66,7 +66,7 @@ class Application extends App
         $this->registerApp('Pack');
         $this->registerApp('Phar');
         $this->registerApp('Createrepo');
-        $this->registerApp('InstallBin', 'install-bin');
+        $this->registerApp('InstallBin', 'install:bin');
 
         $package = $env->get('localPackage');
         $scripts = $package->getInfo('scripts');
