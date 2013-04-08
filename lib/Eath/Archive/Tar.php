@@ -121,6 +121,9 @@ class Tar extends BaseClass
 
     public function extractTo($file, $dir)
     {
+        if (substr($file, -4) != ".tar") {
+            die('unexpected error');
+        }
         $archive = new \PharData($file);
         return $archive->extractTo($dir);
     }
