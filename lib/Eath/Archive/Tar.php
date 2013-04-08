@@ -123,6 +123,7 @@ class Tar extends BaseClass
     {
         if (substr($file, -4) != ".tar") {
             rename($file, $file . '.tar');
+            $file .= '.tar';
         }
         $archive = new \PharData($file);
         return $archive->extractTo($dir);
